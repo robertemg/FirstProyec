@@ -251,13 +251,18 @@
 
   <div class="toast" id="toast"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script>
-    const API = '/api/personas';
+    const SUPABASE_URL = 'https://uzqkzmcewiuiwobptrka.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_2reuQ-0dSa4drczF7tcgbA_YSnEkuVY';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
     let editingId = null;
 
     async function fetchRecords() {
-      const res = await fetch(API);
-      return res.json();
+      const { data, error } = await supabase.from('personas').select('*').order('created_at', { ascending: false });
+      if (error) { showToast('Error al cargar registros.', '#e05c7a'); return []; }
+      return data;
     }
 
     function formatDate(d) {
@@ -306,7 +311,7 @@
         nombre: document.getElementById('nombre').value.trim(),
         fecha:  document.getElementById('fecha').value,
         estado: document.getElementById('estado').value,
-        sueldo: document.getElementById('sueldo').value,
+        sueldo: parseFloat(document.getElementById('sueldo').value),
       };
     }
 
@@ -324,11 +329,11 @@
     }
 
     function validate(f) {
-      if (!f.dpi)    { showToast('El DPI es requerido.', '#e05c7a'); return false; }
-      if (!f.nombre) { showToast('El nombre es requerido.', '#e05c7a'); return false; }
-      if (!f.fecha)  { showToast('La fecha de nacimiento es requerida.', '#e05c7a'); return false; }
-      if (!f.estado) { showToast('El estado civil es requerido.', '#e05c7a'); return false; }
-      if (!f.sueldo || isNaN(f.sueldo)) { showToast('El sueldo es requerido.', '#e05c7a'); return false; }
+      if (!f.dpi)             { showToast('El DPI es requerido.', '#e05c7a'); return false; }
+      if (!f.nombre)          { showToast('El nombre es requerido.', '#e05c7a'); return false; }
+      if (!f.fecha)           { showToast('La fecha de nacimiento es requerida.', '#e05c7a'); return false; }
+      if (!f.estado)          { showToast('El estado civil es requerido.', '#e05c7a'); return false; }
+      if (isNaN(f.sueldo))    { showToast('El sueldo es requerido.', '#e05c7a'); return false; }
       return true;
     }
 
@@ -341,27 +346,22 @@
 
       try {
         if (editingId) {
-          await fetch(`${API}/${editingId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(f),
-          });
+          const { nombre, fecha, estado, sueldo } = f;
+          const { error } = await supabase.from('personas').update({ nombre, fecha, estado, sueldo }).eq('dpi', editingId);
+          if (error) throw error;
           showToast('Registro actualizado.');
           editingId = null;
         } else {
-          await fetch(API, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(f),
-          });
+          const { error } = await supabase.from('personas').insert([f]);
+          if (error) throw error;
           showToast('Registro guardado.');
         }
 
         await render();
         clearFields();
         setEditMode(false);
-      } catch {
-        showToast('Error al conectar con el servidor.', '#e05c7a');
+      } catch (err) {
+        showToast(err.message || 'Error al guardar.', '#e05c7a');
       } finally {
         btn.disabled = false;
       }
@@ -384,14 +384,15 @@
     }
 
     function setEditMode(on) {
-      document.getElementById('form-title').textContent  = on ? 'Editar registro' : 'Nuevo registro';
-      document.getElementById('btn-submit').textContent  = on ? 'Actualizar' : 'Guardar';
+      document.getElementById('form-title').textContent   = on ? 'Editar registro' : 'Nuevo registro';
+      document.getElementById('btn-submit').textContent   = on ? 'Actualizar' : 'Guardar';
       document.getElementById('btn-cancel').style.display = on ? 'inline-block' : 'none';
     }
 
     async function deleteRecord(id) {
       if (!confirm('¿Eliminar este registro?')) return;
-      await fetch(`${API}/${id}`, { method: 'DELETE' });
+      const { error } = await supabase.from('personas').delete().eq('dpi', id);
+      if (error) { showToast(error.message, '#e05c7a'); return; }
       showToast('Registro eliminado.', '#e05c7a');
       await render();
     }
