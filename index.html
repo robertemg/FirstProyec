@@ -357,6 +357,7 @@
     async function submitForm() {
       const f = getFields();
       document.getElementById('log').value = '';
+      alert('Datos a enviar a Supabase:\n' + JSON.stringify(f, null, 2));
       appendLog('campos: ' + JSON.stringify(f));
       if (!validate(f)) return;
 
