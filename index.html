@@ -226,10 +226,6 @@
         <button class="btn-secondary" id="btn-cancel" onclick="cancelEdit()" style="display:none">Cancelar</button>
         <button class="btn-primary" id="btn-submit" onclick="submitForm()">Guardar</button>
       </div>
-      <div class="field full" style="margin-top:1rem;">
-        <label for="log">Log</label>
-        <textarea id="log" rows="5" readonly style="width:100%;font-family:monospace;font-size:0.82rem;background:#f4f4f4;border:1px solid #ccc;border-radius:6px;padding:0.6rem;resize:vertical;color:#333;"></textarea>
-      </div>
     </div>
 
     <div class="card">
@@ -263,15 +259,7 @@
 
     let editingId = null;
 
-    function appendLog(msg) {
-      const logEl = document.getElementById('log');
-      if (!logEl) return;
-      const ts = new Date().toLocaleTimeString('es-GT');
-      logEl.value += '[' + ts + '] ' + msg + '\n';
-      logEl.scrollTop = logEl.scrollHeight;
-    }
-
-    async function fetchRecords() {
+async function fetchRecords() {
       const { data, error } = await db.from('personas').select('*').order('created_at', { ascending: false });
       if (error) { showToast('Error al cargar registros.', '#e05c7a'); return []; }
       return data;
@@ -351,8 +339,6 @@
 
     async function submitForm() {
       const f = getFields();
-      document.getElementById('log').value = '';
-      appendLog('campos: ' + JSON.stringify(f));
       if (!validate(f)) return;
 
       const btn = document.getElementById('btn-submit');
@@ -361,16 +347,12 @@
       try {
         if (editingId) {
           const { nombre, fecha, estado, sueldo } = f;
-          appendLog('UPDATE dpi=' + editingId + ' payload=' + JSON.stringify({ nombre, fecha, estado, sueldo }));
-          const { data, error } = await db.from('personas').update({ nombre, fecha, estado, sueldo }).eq('dpi', editingId).select();
-          appendLog('UPDATE data=' + JSON.stringify(data) + ' error=' + JSON.stringify(error));
+          const { error } = await db.from('personas').update({ nombre, fecha, estado, sueldo }).eq('dpi', editingId).select();
           if (error) throw error;
           showToast('Registro actualizado.');
           editingId = null;
         } else {
-          appendLog('INSERT payload=' + JSON.stringify(f));
-          const { data, error } = await db.from('personas').insert([f]).select();
-          appendLog('INSERT data=' + JSON.stringify(data) + ' error=' + JSON.stringify(error));
+          const { error } = await db.from('personas').insert([f]).select();
           if (error) throw error;
           showToast('Registro guardado.');
         }
@@ -379,7 +361,6 @@
         clearFields();
         setEditMode(false);
       } catch (err) {
-        appendLog('EXCEPCION: ' + (err.message || JSON.stringify(err)));
         showToast(err.message || 'Error al guardar.', '#e05c7a');
       } finally {
         btn.disabled = false;
