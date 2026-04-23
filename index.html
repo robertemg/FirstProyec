@@ -257,9 +257,22 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script>
-    const SUPABASE_URL = 'https://uzqkzmcewiuiwobptrka.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_2reuQ-0dSa4drczF7tcgbA_YSnEkuVY';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    function appendLog(msg) {
+      const log = document.getElementById('log');
+      const ts = new Date().toLocaleTimeString('es-GT');
+      log.value += `[${ts}] ${msg}\n`;
+      log.scrollTop = log.scrollHeight;
+    }
+
+    let supabase;
+    try {
+      const SUPABASE_URL = 'https://uzqkzmcewiuiwobptrka.supabase.co';
+      const SUPABASE_KEY = 'sb_publishable_2reuQ-0dSa4drczF7tcgbA_YSnEkuVY';
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      appendLog('Supabase inicializado OK');
+    } catch(e) {
+      appendLog('ERROR al inicializar Supabase: ' + e.message);
+    }
 
     let editingId = null;
 
@@ -339,13 +352,6 @@
       if (!f.estado)          { showToast('El estado civil es requerido.', '#e05c7a'); return false; }
       if (isNaN(f.sueldo))    { showToast('El sueldo es requerido.', '#e05c7a'); return false; }
       return true;
-    }
-
-    function appendLog(msg) {
-      const log = document.getElementById('log');
-      const ts = new Date().toLocaleTimeString('es-GT');
-      log.value += `[${ts}] ${msg}\n`;
-      log.scrollTop = log.scrollHeight;
     }
 
     async function submitForm() {
