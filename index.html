@@ -292,8 +292,8 @@
           <td>${formatSueldo(r.sueldo)}</td>
           <td>
             <div class="td-actions">
-              <button class="btn-edit" onclick="startEdit('${r.id}')">Editar</button>
-              <button class="btn-delete" onclick="deleteRecord('${r.id}')">Eliminar</button>
+              <button class="btn-edit" onclick="startEdit('${r.dpi}')">Editar</button>
+              <button class="btn-delete" onclick="deleteRecord('${r.dpi}')">Eliminar</button>
             </div>
           </td>
         </tr>
@@ -369,7 +369,7 @@
 
     async function startEdit(id) {
       const records = await fetchRecords();
-      const r = records.find(r => r.id === id);
+      const r = records.find(r => r.dpi === id);
       if (!r) return;
       editingId = id;
       setFields(r);
