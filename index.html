@@ -339,6 +339,7 @@
 
     async function submitForm() {
       const f = getFields();
+      console.log('[submitForm] campos:', JSON.stringify(f));
       if (!validate(f)) return;
 
       const btn = document.getElementById('btn-submit');
@@ -347,12 +348,16 @@
       try {
         if (editingId) {
           const { nombre, fecha, estado, sueldo } = f;
-          const { error } = await supabase.from('personas').update({ nombre, fecha, estado, sueldo }).eq('dpi', editingId);
+          console.log('[UPDATE] dpi:', editingId, { nombre, fecha, estado, sueldo });
+          const { data, error } = await supabase.from('personas').update({ nombre, fecha, estado, sueldo }).eq('dpi', editingId).select();
+          console.log('[UPDATE] data:', JSON.stringify(data), 'error:', JSON.stringify(error));
           if (error) throw error;
           showToast('Registro actualizado.');
           editingId = null;
         } else {
-          const { error } = await supabase.from('personas').insert([f]);
+          console.log('[INSERT] payload:', JSON.stringify(f));
+          const { data, error } = await supabase.from('personas').insert([f]).select();
+          console.log('[INSERT] data:', JSON.stringify(data), 'error:', JSON.stringify(error));
           if (error) throw error;
           showToast('Registro guardado.');
         }
@@ -361,6 +366,7 @@
         clearFields();
         setEditMode(false);
       } catch (err) {
+        console.error('[submitForm] excepcion:', err);
         showToast(err.message || 'Error al guardar.', '#e05c7a');
       } finally {
         btn.disabled = false;
