@@ -2,24 +2,409 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Hola Mundo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro de Personas</title>
   <style>
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      background-color: #1a1a2e;
-      font-family: Arial, sans-serif;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f17;
+      --surface: #1a1a2e;
+      --surface2: #16213e;
+      --border: #2a2a4a;
+      --accent: #7c6af7;
+      --accent-hover: #6a58e8;
+      --danger: #e05c7a;
+      --text: #e0e0f0;
+      --text-muted: #8888aa;
+      --input-bg: #12121e;
+      --radius: 8px;
     }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
     h1 {
-      color: #e0e0e0;
-      font-size: 4rem;
+      text-align: center;
+      font-size: 1.6rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+      margin-bottom: 2rem;
+    }
+
+    .container { max-width: 860px; margin: 0 auto; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.8rem;
+      margin-bottom: 2rem;
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 1.4rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 0.35rem; }
+    .field.full { grid-column: 1 / -1; }
+
+    label { font-size: 0.78rem; color: var(--text-muted); letter-spacing: 0.04em; text-transform: uppercase; }
+
+    input, select {
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      padding: 0.6rem 0.8rem;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+
+    input:focus, select:focus { border-color: var(--accent); }
+    select option { background: var(--surface2); }
+
+    .actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.4rem;
+      justify-content: flex-end;
+    }
+
+    button {
+      padding: 0.55rem 1.4rem;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    button:active { transform: scale(0.97); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn-secondary { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--border); color: var(--text); }
+
+    .table-wrapper { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    thead th {
+      background: var(--surface2);
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+
+    tbody tr:hover { background: var(--surface2); }
+    td { padding: 0.75rem 1rem; }
+
+    .td-actions { display: flex; gap: 0.5rem; }
+
+    .btn-edit {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      padding: 0.3rem 0.75rem;
+      font-size: 0.8rem;
+    }
+
+    .btn-edit:hover { background: var(--accent); color: #fff; }
+
+    .btn-delete {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid var(--danger);
+      padding: 0.3rem 0.75rem;
+      font-size: 0.8rem;
+    }
+
+    .btn-delete:hover { background: var(--danger); color: #fff; }
+
+    .empty {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 2.5rem;
+      font-size: 0.9rem;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: #4caf50;
+      color: #fff;
+      padding: 0.7rem 1.2rem;
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+    }
+
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 600px) {
+      .grid { grid-template-columns: 1fr; }
+      .field.full { grid-column: 1; }
     }
   </style>
 </head>
 <body>
-  <h1>HOLA MUNDO</h1>
+  <div class="container">
+    <h1>Registro de Personas</h1>
+
+    <div class="card">
+      <h2 id="form-title">Nuevo registro</h2>
+      <div class="grid">
+        <div class="field">
+          <label for="dpi">DPI</label>
+          <input type="text" id="dpi" placeholder="0000 00000 0101" maxlength="13">
+        </div>
+        <div class="field">
+          <label for="nombre">Nombre completo</label>
+          <input type="text" id="nombre" placeholder="Juan Pérez">
+        </div>
+        <div class="field">
+          <label for="fecha">Fecha de nacimiento</label>
+          <input type="date" id="fecha">
+        </div>
+        <div class="field">
+          <label for="estado">Estado civil</label>
+          <select id="estado">
+            <option value="" disabled selected>Seleccionar...</option>
+            <option value="Soltero/a">Soltero/a</option>
+            <option value="Casado/a">Casado/a</option>
+            <option value="Divorciado/a">Divorciado/a</option>
+            <option value="Viudo/a">Viudo/a</option>
+            <option value="Unión libre">Unión libre</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label for="sueldo">Sueldo (Q)</label>
+          <input type="number" id="sueldo" placeholder="0.00" min="0" step="0.01">
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn-secondary" id="btn-cancel" onclick="cancelEdit()" style="display:none">Cancelar</button>
+        <button class="btn-primary" id="btn-submit" onclick="submitForm()">Guardar</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Registros (<span id="count">0</span>)</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>DPI</th>
+              <th>Nombre</th>
+              <th>Fecha Nac.</th>
+              <th>Estado Civil</th>
+              <th>Sueldo</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div class="empty" id="empty">No hay registros aún.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API = '/api/personas';
+    let editingId = null;
+
+    async function fetchRecords() {
+      const res = await fetch(API);
+      return res.json();
+    }
+
+    function formatDate(d) {
+      if (!d) return '—';
+      const [y, m, day] = d.split('-');
+      return `${day}/${m}/${y}`;
+    }
+
+    function formatSueldo(s) {
+      return 'Q ' + parseFloat(s).toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    async function render() {
+      const records = await fetchRecords();
+      const tbody = document.getElementById('tbody');
+      const empty = document.getElementById('empty');
+      document.getElementById('count').textContent = records.length;
+
+      if (records.length === 0) {
+        tbody.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+      tbody.innerHTML = records.map(r => `
+        <tr>
+          <td>${r.dpi}</td>
+          <td>${r.nombre}</td>
+          <td>${formatDate(r.fecha)}</td>
+          <td>${r.estado}</td>
+          <td>${formatSueldo(r.sueldo)}</td>
+          <td>
+            <div class="td-actions">
+              <button class="btn-edit" onclick="startEdit('${r.id}')">Editar</button>
+              <button class="btn-delete" onclick="deleteRecord('${r.id}')">Eliminar</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function getFields() {
+      return {
+        dpi:    document.getElementById('dpi').value.trim(),
+        nombre: document.getElementById('nombre').value.trim(),
+        fecha:  document.getElementById('fecha').value,
+        estado: document.getElementById('estado').value,
+        sueldo: document.getElementById('sueldo').value,
+      };
+    }
+
+    function setFields(r) {
+      document.getElementById('dpi').value    = r.dpi;
+      document.getElementById('nombre').value = r.nombre;
+      document.getElementById('fecha').value  = r.fecha;
+      document.getElementById('estado').value = r.estado;
+      document.getElementById('sueldo').value = r.sueldo;
+    }
+
+    function clearFields() {
+      ['dpi','nombre','fecha','sueldo'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('estado').selectedIndex = 0;
+    }
+
+    function validate(f) {
+      if (!f.dpi)    { showToast('El DPI es requerido.', '#e05c7a'); return false; }
+      if (!f.nombre) { showToast('El nombre es requerido.', '#e05c7a'); return false; }
+      if (!f.fecha)  { showToast('La fecha de nacimiento es requerida.', '#e05c7a'); return false; }
+      if (!f.estado) { showToast('El estado civil es requerido.', '#e05c7a'); return false; }
+      if (!f.sueldo || isNaN(f.sueldo)) { showToast('El sueldo es requerido.', '#e05c7a'); return false; }
+      return true;
+    }
+
+    async function submitForm() {
+      const f = getFields();
+      if (!validate(f)) return;
+
+      const btn = document.getElementById('btn-submit');
+      btn.disabled = true;
+
+      try {
+        if (editingId) {
+          await fetch(`${API}/${editingId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(f),
+          });
+          showToast('Registro actualizado.');
+          editingId = null;
+        } else {
+          await fetch(API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(f),
+          });
+          showToast('Registro guardado.');
+        }
+
+        await render();
+        clearFields();
+        setEditMode(false);
+      } catch {
+        showToast('Error al conectar con el servidor.', '#e05c7a');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function startEdit(id) {
+      const records = await fetchRecords();
+      const r = records.find(r => r.id === id);
+      if (!r) return;
+      editingId = id;
+      setFields(r);
+      setEditMode(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelEdit() {
+      editingId = null;
+      clearFields();
+      setEditMode(false);
+    }
+
+    function setEditMode(on) {
+      document.getElementById('form-title').textContent  = on ? 'Editar registro' : 'Nuevo registro';
+      document.getElementById('btn-submit').textContent  = on ? 'Actualizar' : 'Guardar';
+      document.getElementById('btn-cancel').style.display = on ? 'inline-block' : 'none';
+    }
+
+    async function deleteRecord(id) {
+      if (!confirm('¿Eliminar este registro?')) return;
+      await fetch(`${API}/${id}`, { method: 'DELETE' });
+      showToast('Registro eliminado.', '#e05c7a');
+      await render();
+    }
+
+    function showToast(msg, bg = '#4caf50') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.background = bg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    render();
+  </script>
 </body>
 </html>
