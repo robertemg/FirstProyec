@@ -257,27 +257,22 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script>
-    function appendLog(msg) {
-      const log = document.getElementById('log');
-      const ts = new Date().toLocaleTimeString('es-GT');
-      log.value += `[${ts}] ${msg}\n`;
-      log.scrollTop = log.scrollHeight;
-    }
-
-    let supabase;
-    try {
-      const SUPABASE_URL = 'https://uzqkzmcewiuiwobptrka.supabase.co';
-      const SUPABASE_KEY = 'sb_publishable_2reuQ-0dSa4drczF7tcgbA_YSnEkuVY';
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-      appendLog('Supabase inicializado OK');
-    } catch(e) {
-      appendLog('ERROR al inicializar Supabase: ' + e.message);
-    }
+    const SUPABASE_URL = 'https://uzqkzmcewiuiwobptrka.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_2reuQ-0dSa4drczF7tcgbA_YSnEkuVY';
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let editingId = null;
 
+    function appendLog(msg) {
+      const logEl = document.getElementById('log');
+      if (!logEl) return;
+      const ts = new Date().toLocaleTimeString('es-GT');
+      logEl.value += '[' + ts + '] ' + msg + '\n';
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
     async function fetchRecords() {
-      const { data, error } = await supabase.from('personas').select('*').order('created_at', { ascending: false });
+      const { data, error } = await db.from('personas').select('*').order('created_at', { ascending: false });
       if (error) { showToast('Error al cargar registros.', '#e05c7a'); return []; }
       return data;
     }
@@ -357,7 +352,6 @@
     async function submitForm() {
       const f = getFields();
       document.getElementById('log').value = '';
-      alert('Datos a enviar a Supabase:\n' + JSON.stringify(f, null, 2));
       appendLog('campos: ' + JSON.stringify(f));
       if (!validate(f)) return;
 
@@ -368,14 +362,14 @@
         if (editingId) {
           const { nombre, fecha, estado, sueldo } = f;
           appendLog('UPDATE dpi=' + editingId + ' payload=' + JSON.stringify({ nombre, fecha, estado, sueldo }));
-          const { data, error } = await supabase.from('personas').update({ nombre, fecha, estado, sueldo }).eq('dpi', editingId).select();
+          const { data, error } = await db.from('personas').update({ nombre, fecha, estado, sueldo }).eq('dpi', editingId).select();
           appendLog('UPDATE data=' + JSON.stringify(data) + ' error=' + JSON.stringify(error));
           if (error) throw error;
           showToast('Registro actualizado.');
           editingId = null;
         } else {
           appendLog('INSERT payload=' + JSON.stringify(f));
-          const { data, error } = await supabase.from('personas').insert([f]).select();
+          const { data, error } = await db.from('personas').insert([f]).select();
           appendLog('INSERT data=' + JSON.stringify(data) + ' error=' + JSON.stringify(error));
           if (error) throw error;
           showToast('Registro guardado.');
@@ -416,7 +410,7 @@
 
     async function deleteRecord(id) {
       if (!confirm('¿Eliminar este registro?')) return;
-      const { error } = await supabase.from('personas').delete().eq('dpi', id);
+      const { error } = await db.from('personas').delete().eq('dpi', id);
       if (error) { showToast(error.message, '#e05c7a'); return; }
       showToast('Registro eliminado.', '#e05c7a');
       await render();
